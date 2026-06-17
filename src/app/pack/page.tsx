@@ -179,17 +179,18 @@ export default function PackPage() {
               rounded-b-3xl rounded-t-sm
               border-t-8 border-rose-600
               shadow-2xl shadow-rose-300/60
-              overflow-hidden
               transition-transform duration-200
               ${overBox ? "scale-[1.018] ring-4 ring-white/50" : ""}
             `}
           >
             {/* Vertical ribbon strip */}
-            <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-5 bg-white/15 pointer-events-none" />
+            <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-6 bg-white/35 pointer-events-none z-0" />
             {/* Horizontal ribbon strip */}
-            <div className="absolute inset-x-0 top-[38%] h-5 bg-white/15 pointer-events-none" />
+            <div className="absolute inset-x-0 top-[38%] h-6 bg-white/35 pointer-events-none z-0" />
             {/* Inner shadow at top rim */}
-            <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black/15 to-transparent pointer-events-none" />
+            <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-black/20 to-transparent pointer-events-none z-0" />
+            {/* Bottom depth shadow */}
+            <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-rose-700/40 to-transparent pointer-events-none z-0" />
 
             {/* Contents */}
             <div className="relative z-10 w-full h-full flex flex-wrap items-center justify-center gap-3 p-5 content-center">

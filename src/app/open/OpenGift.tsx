@@ -280,7 +280,7 @@ export function OpenGift() {
             </div>
 
             {/* Stationery paper unfolding */}
-            <div className="bg-[#fffcf7] rounded-3xl border border-rose-100 shadow-xl overflow-hidden [animation:letter-drop_0.65s_ease-out_forwards]">
+            <div className="bg-[#fffcf7] rounded-3xl border border-rose-100 shadow-xl overflow-hidden origin-top [animation:letter-drop_0.65s_ease-out_forwards]">
               {/* Paper header */}
               <div className="flex items-center gap-2 px-5 py-3 border-b border-rose-100 bg-rose-50/50">
                 <span className="text-rose-300" aria-hidden="true">

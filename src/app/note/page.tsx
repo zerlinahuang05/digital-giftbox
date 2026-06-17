@@ -45,8 +45,10 @@ export default function NotePage() {
     // Trigger stationery fold-away animation, then show the full-screen seal flash,
     // then navigate.
     setSealing(true);
-    window.setTimeout(() => setSealed(true), 750);
-    window.setTimeout(() => router.push("/share"), 1650);
+    // Let the stationery fold-away animation run for ~700 ms,
+    // then show the full-screen envelope flash for ~900 ms, then navigate.
+    window.setTimeout(() => setSealed(true), 700);
+    window.setTimeout(() => router.push("/share"), 1900);
   }
 
   return (
@@ -95,7 +97,8 @@ export default function NotePage() {
         className={`
           relative flex-1 mx-4 mt-3 mb-4 rounded-3xl overflow-hidden
           shadow-xl border border-rose-100/60
-          ${sealing ? "[animation:scale-out-up_0.75s_ease-in_forwards]" : ""}
+          transition-opacity
+          ${sealing ? "opacity-0 [animation:scale-out-up_0.65s_ease-in_forwards]" : "opacity-100"}
         `}
       >
         {/* Paper background */}
