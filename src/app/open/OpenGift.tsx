@@ -25,8 +25,10 @@ export function OpenGift() {
           </h1>
 
           <button
-            className={`mx-auto my-8 flex h-44 w-44 items-center justify-center rounded-[2rem] bg-white text-7xl shadow-xl shadow-rose-200 transition duration-500 ${
-              isOpen ? "rotate-2 scale-105" : "hover:-translate-y-1 hover:rotate-3"
+            className={`mx-auto flex items-center justify-center rounded-[2rem] bg-white shadow-xl shadow-rose-200 transition duration-500 ${
+              isOpen
+                ? "my-6 h-36 w-36 rotate-2 text-6xl"
+                : "my-8 h-44 w-44 text-7xl hover:-translate-y-1 hover:rotate-3"
             }`}
             onClick={() => setIsOpen(true)}
             type="button"
@@ -37,12 +39,12 @@ export function OpenGift() {
 
           {isOpen ? (
             <div className="space-y-4">
-              <div>
+              <div className="space-y-3">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-rose-500">
                   {gift.name}
                 </p>
-                <h2 className="mt-2 text-2xl font-black text-rose-950">{gift.tagline}</h2>
-                <p className="mt-3 text-sm leading-6 text-stone-700">{gift.description}</p>
+                <h2 className="text-2xl font-black leading-snug text-rose-950">{gift.tagline}</h2>
+                <p className="text-sm leading-7 text-stone-700">{gift.description}</p>
               </div>
               <p className="rounded-3xl bg-white/80 p-5 text-left text-base leading-7 text-stone-800 shadow-inner">
                 {note}
