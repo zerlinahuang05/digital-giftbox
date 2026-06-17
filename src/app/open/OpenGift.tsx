@@ -30,7 +30,7 @@ export function OpenGift() {
 
   function openPackage() {
     setIsOpening(true);
-    window.setTimeout(() => setIsOpen(true), 1200);
+    window.setTimeout(() => setIsOpen(true), 3000);
   }
 
   return (
@@ -60,7 +60,7 @@ export function OpenGift() {
 
             <div
               className={`rounded-[2rem] bg-gradient-to-br from-rose-200 via-orange-100 to-pink-100 p-4 ${
-                isOpening ? "[animation:float-soft_0.45s_ease-in-out_infinite]" : ""
+                isOpening ? "ring-4 ring-rose-200 [animation:float-soft_0.45s_ease-in-out_infinite]" : ""
               }`}
             >
               <div className="relative mx-auto h-40 w-52">
@@ -78,6 +78,12 @@ export function OpenGift() {
                 <div className="absolute bottom-11 left-0 h-10 w-52 rounded-2xl bg-white/60" />
               </div>
             </div>
+
+            {isOpening ? (
+              <p className="mt-4 rounded-full bg-rose-100 px-4 py-3 text-sm font-black uppercase tracking-[0.2em] text-rose-700">
+                Opening your Lovebox...
+              </p>
+            ) : null}
 
             {isDelivered ? (
               <div className="mt-5 space-y-4">
