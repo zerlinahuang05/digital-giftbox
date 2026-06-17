@@ -30,7 +30,7 @@ export function OpenGift() {
 
   function openPackage() {
     setIsOpening(true);
-    window.setTimeout(() => setIsOpen(true), 650);
+    window.setTimeout(() => setIsOpen(true), 1200);
   }
 
   return (
@@ -58,13 +58,20 @@ export function OpenGift() {
               ))}
             </div>
 
-            <div className="rounded-[2rem] bg-gradient-to-br from-rose-200 via-orange-100 to-pink-100 p-4">
+            <div
+              className={`rounded-[2rem] bg-gradient-to-br from-rose-200 via-orange-100 to-pink-100 p-4 ${
+                isOpening ? "[animation:float-soft_0.45s_ease-in-out_infinite]" : ""
+              }`}
+            >
               <div className="relative mx-auto h-40 w-52">
                 <div
-                  className={`absolute left-8 top-4 h-16 w-36 rounded-t-3xl bg-rose-300 shadow-lg transition duration-700 ${
-                    isOpening ? "[animation:lid-open_0.65s_ease-out_forwards]" : ""
+                  className={`absolute left-8 top-4 h-16 w-36 rounded-t-3xl bg-rose-300 shadow-lg ${
+                    isOpening ? "[animation:lid-open_1s_ease-out_forwards]" : ""
                   }`}
                 />
+                {isOpening ? (
+                  <div className="absolute left-1/2 top-6 -translate-x-1/2 text-4xl">✨</div>
+                ) : null}
                 <div className="absolute bottom-4 left-6 h-28 w-40 rounded-[2rem] bg-rose-500 shadow-xl shadow-rose-300" />
                 <div className="absolute bottom-4 left-1/2 h-28 w-6 -translate-x-1/2 bg-rose-200" />
                 <div className="absolute bottom-16 left-6 h-6 w-40 bg-rose-200" />
@@ -77,10 +84,11 @@ export function OpenGift() {
                 <h2 className="text-3xl font-black text-rose-950">You have 1 package!</h2>
                 <button
                   className="rounded-full bg-rose-500 px-7 py-4 text-base font-black text-white shadow-xl shadow-rose-300 transition hover:-translate-y-0.5 hover:bg-rose-600"
+                  disabled={isOpening}
                   onClick={openPackage}
                   type="button"
                 >
-                  Open package
+                  {isOpening ? "Opening..." : "Open package"}
                 </button>
               </div>
             ) : (
