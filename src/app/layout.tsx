@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Digital Giftbox",
-  description: "A sweet little digital gift builder for someone you love.",
+  title: "Lovebox",
+  description: "A romantic digital gift package for someone far away.",
 };
 
 export default function RootLayout({
