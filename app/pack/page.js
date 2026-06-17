@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
@@ -47,9 +47,10 @@ export default function PackPage() {
   const [placement, setPlacement] = useState({});
   const [activeId, setActiveId] = useState(null);
 
-  // Set up dragging for both mouse (Pointer) and touch (Touch) devices.
+  // Set up dragging for both computers (Mouse) and phones (Touch).
+  // On phones we wait for a short press so normal scrolling still works.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, {
       activationConstraint: { delay: 120, tolerance: 8 },
     })
