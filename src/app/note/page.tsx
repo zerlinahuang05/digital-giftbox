@@ -45,10 +45,10 @@ export default function NotePage() {
     // Trigger stationery fold-away animation, then show the full-screen seal flash,
     // then navigate.
     setSealing(true);
-    // Let the stationery fold-away animation run for ~700 ms,
-    // then show the full-screen envelope flash for ~900 ms, then navigate.
+    // Stationery fades/scales out (700 ms), then the sealed envelope flash
+    // holds for ~1.2 s so the animation is clearly filmable, then navigate.
     window.setTimeout(() => setSealed(true), 700);
-    window.setTimeout(() => router.push("/share"), 1900);
+    window.setTimeout(() => router.push("/share"), 2400);
   }
 
   return (
