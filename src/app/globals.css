@@ -1,0 +1,270 @@
+@import "tailwindcss";
+
+/* ── Design tokens ── */
+:root {
+  --cream: #fff7f0;
+  --blush: #fde8e4;
+  --ink: #3d1f1a;
+}
+
+/* ── Resets ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--cream);
+  background-image: radial-gradient(
+      ellipse at 12% 10%,
+      rgba(253, 232, 228, 0.6) 0%,
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse at 88% 82%,
+      rgba(254, 215, 170, 0.38) 0%,
+      transparent 52%
+    );
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: #fecdd3;
+  color: #7f1d1d;
+}
+
+/* ── Hide scrollbar on gift picker row ── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   KEYFRAME ANIMATIONS
+   Used via Tailwind arbitrary values, e.g.:
+     className="[animation:pop-in_0.4s_ease-out_forwards]"
+════════════════════════════════════════════════════════════════ */
+
+/* Gentle vertical bob */
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+/* Hearts drift upward and fade */
+@keyframes heart-rise {
+  0% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.75;
+  }
+
+  70% {
+    transform: translateY(-52px) scale(1.1);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: translateY(-95px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* Sparkle twinkle in/out */
+@keyframes sparkle {
+  0%,
+  100% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1) rotate(180deg);
+    opacity: 1;
+  }
+}
+
+/* Bouncy pop-in (gifts entering box, confirm screens) */
+@keyframes pop-in {
+  0% {
+    transform: scale(0.55) translateY(14px);
+    opacity: 0;
+  }
+
+  65% {
+    transform: scale(1.08) translateY(-3px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Fade up from slightly below */
+@keyframes fade-up {
+  from {
+    transform: translateY(18px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Plain fade in */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Delivery tracking step slides in from left */
+@keyframes tracking-in {
+  from {
+    transform: translateX(-16px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Box lid flies open (rotate + translate) */
+@keyframes lid-open {
+  0% {
+    transform: rotate(0deg) translateY(0px) translateX(0px);
+  }
+
+  40% {
+    transform: rotate(-22deg) translateY(-20px) translateX(-5px);
+  }
+
+  100% {
+    transform: rotate(-50deg) translateY(-70px) translateX(-10px);
+  }
+}
+
+/* Gift bounces out of the box */
+@keyframes gift-reveal {
+  0% {
+    transform: translateY(30px) scale(0.4);
+    opacity: 0;
+  }
+
+  60% {
+    transform: translateY(-8px) scale(1.15);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Gentle bounce (waiting package) */
+@keyframes bounce-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Stationery sheet folds away on seal */
+@keyframes scale-out-up {
+  from {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: scale(0.04) translateY(-28px);
+    opacity: 0;
+  }
+}
+
+/* Letter unfolds from top down.
+   Set transform-origin: top center ON THE ELEMENT, not here. */
+@keyframes letter-drop {
+  0% {
+    transform: scaleY(0.04) translateY(-6px);
+    opacity: 0;
+  }
+
+  80% {
+    transform: scaleY(1.02) translateY(1px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scaleY(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Confetti/ribbon piece falls */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Sticker shake on hover */
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-6deg);
+  }
+
+  75% {
+    transform: rotate(6deg);
+  }
+}
