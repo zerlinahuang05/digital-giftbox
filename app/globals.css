@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+/*
+  ────────────────────────────────────────────────────────────
+  LOVEBOX THEME COLORS
+  ────────────────────────────────────────────────────────────
+  Want to change the look of the app? These are the main colors.
+  Edit the hex codes below and the whole app updates.
+  (You can also tweak colors in: data/config.js)
+*/
+:root {
+  --cream: #fff6ec;        /* soft cream background */
+  --cream-deep: #ffe9d6;   /* slightly deeper cream */
+  --blush: #ffd9e0;        /* blush pink */
+  --pink: #ff7aa2;         /* bright pink (buttons) */
+  --pink-deep: #ff5588;    /* darker pink (button shadow) */
+  --plum: #6b3b5e;         /* soft dark text color */
+  --mint: #bdeccd;         /* gentle mint accent */
+  --sky: #cfe6ff;          /* gentle sky accent */
+  --gold: #ffd479;         /* sparkle gold */
+}
+
+/* Make our colors available as Tailwind utilities (bg-cream, text-plum, etc.) */
+@theme inline {
+  --color-cream: var(--cream);
+  --color-cream-deep: var(--cream-deep);
+  --color-blush: var(--blush);
+  --color-pink: var(--pink);
+  --color-pink-deep: var(--pink-deep);
+  --color-plum: var(--plum);
+  --color-mint: var(--mint);
+  --color-sky: var(--sky);
+  --color-gold: var(--gold);
+  --font-pixel: var(--font-pixel);
+  --font-round: var(--font-round);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  color: var(--plum);
+  font-family: var(--font-round), system-ui, sans-serif;
+  /* Warm cream -> blush gradient + a subtle paper dot texture on top */
+  background-color: var(--cream);
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(107, 59, 94, 0.05) 1px, transparent 0),
+    linear-gradient(160deg, var(--cream) 0%, var(--cream-deep) 45%, var(--blush) 100%);
+  background-size: 18px 18px, 100% 100%;
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Pixel font helper for cute video-game headings */
+.font-pixel {
+  font-family: var(--font-pixel), monospace;
+}
+
+/*
+  ────────────────────────────────────────────────────────────
+  CUTE BUTTON  (used on every page)
+  ────────────────────────────────────────────────────────────
+*/
+.btn-cute {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-align: center;
+  color: white;
+  background: var(--pink);
+  padding: 1rem 1.5rem;
+  border-radius: 9999px;
+  border: 3px solid white;
+  box-shadow: 0 6px 0 0 var(--pink-deep), 0 10px 18px rgba(255, 85, 136, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-cute:hover {
+  filter: brightness(1.04);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 0 var(--pink-deep), 0 14px 22px rgba(255, 85, 136, 0.4);
+}
+.btn-cute:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 0 var(--pink-deep), 0 4px 10px rgba(255, 85, 136, 0.3);
+}
+.btn-cute:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+}
+
+/* A softer "secondary" button */
+.btn-soft {
+  background: white;
+  color: var(--plum);
+  box-shadow: 0 6px 0 0 var(--blush), 0 10px 18px rgba(107, 59, 94, 0.15);
+  border: 3px solid var(--blush);
+}
+.btn-soft:hover {
+  box-shadow: 0 8px 0 0 var(--blush), 0 14px 22px rgba(107, 59, 94, 0.18);
+}
+.btn-soft:active {
+  box-shadow: 0 2px 0 0 var(--blush), 0 4px 10px rgba(107, 59, 94, 0.12);
+}
+
+/* Soft rounded card */
+.card-cute {
+  background: rgba(255, 255, 255, 0.7);
+  border: 3px solid white;
+  border-radius: 2rem;
+  box-shadow: 0 12px 30px rgba(107, 59, 94, 0.12);
+  backdrop-filter: blur(4px);
+}
+
+/* Pixel-art images stay crisp when we want them to */
+.pixelated {
+  image-rendering: pixelated;
+}
+
+/* Floating animation for background hearts / sparkles */
+@keyframes floaty {
+  0% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+  50% { transform: translateY(-22px) rotate(var(--rot, 0deg)); }
+  100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+}
+.animate-floaty {
+  animation: floaty var(--dur, 6s) ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+.animate-twinkle {
+  animation: twinkle var(--dur, 3s) ease-in-out infinite;
+}
+
+/* gentle bob for the gift box */
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-bob {
+  animation: bob 3.5s ease-in-out infinite;
+}
+
+/* While dragging a gift, hide the cursor-following ghost's text selection */
+.no-touch-scroll {
+  touch-action: none;
+}
