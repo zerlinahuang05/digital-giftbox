@@ -2,33 +2,30 @@
 
 import Link from "next/link";
 import { useMemo, useState, useSyncExternalStore } from "react";
-import {
-  emptyPayload,
-  encodeLoveboxPayload,
-  getGiftOption,
-  loveboxDraftKey,
-  type LoveboxPayload,
-} from "@/lib/lovebox";
 
-function readDraftPayload() {
-  if (typeof window === "undefined") {
-    return emptyPayload();
-  }
+import { encodePayload, type GiftPayload } from "@/lib/encode";
+import { GIFTS } from "@/lib/gifts";
 
-  const saved = window.localStorage.getItem(loveboxDraftKey);
+const DRAFT_KEY = "lovebox-draft";
 
-  if (!saved) {
-    return emptyPayload();
-  }
-
+// Read the completed draft from localStorage (lazy initializer).
+function readDraft(): GiftPayload {
+  if (typeof window === "undefined") return { gifts: [], note: "" };
   try {
-    return JSON.parse(saved) as LoveboxPayload;
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return { gifts: [], note: "" };
+    const parsed = JSON.parse(raw) as Partial<GiftPayload>;
+    return {
+      gifts: Array.isArray(parsed.gifts) ? parsed.gifts : [],
+      note: typeof parsed.note === "string" ? parsed.note : "",
+    };
   } catch {
-    return emptyPayload();
+    return { gifts: [], note: "" };
   }
 }
 
-function subscribeToNoopStore() {
+// useSyncExternalStore helpers for browser origin (avoids hydration mismatch).
+function noopSubscribe() {
   return () => {};
 }
 
@@ -41,83 +38,104 @@ function getServerOrigin() {
 }
 
 export default function SharePage() {
-  const [payload] = useState<LoveboxPayload>(readDraftPayload);
+  const [draft] = useState<GiftPayload>(readDraft);
   const [copied, setCopied] = useState(false);
-  const origin = useSyncExternalStore(subscribeToNoopStore, getBrowserOrigin, getServerOrigin);
+
+  const origin = useSyncExternalStore(noopSubscribe, getBrowserOrigin, getServerOrigin);
 
   const giftLink = useMemo(() => {
-    if (!origin) {
-      return "";
-    }
+    if (!origin) return "";
+    return `${origin}/open?box=${encodePayload(draft)}`;
+  }, [origin, draft]);
 
-    return `${origin}/open?box=${encodeLoveboxPayload(payload)}`;
-  }, [origin, payload]);
-
-  async function copyGiftLink() {
+  async function copyLink() {
+    if (!giftLink) return;
     await navigator.clipboard.writeText(giftLink);
     setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
+    window.setTimeout(() => setCopied(false), 2200);
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col justify-center gap-5 px-4 py-5">
-      <section className="rounded-[2.3rem] border border-white/80 bg-white/75 p-6 shadow-2xl shadow-rose-200/50">
-        <div className="text-center">
-          <div className="mx-auto flex h-28 w-28 items-center justify-center rounded-[2rem] bg-rose-100 text-6xl shadow-inner">
-            💌
-          </div>
-          <p className="mt-5 text-sm font-black uppercase tracking-[0.3em] text-rose-500">
-            sealed and ready
-          </p>
-          <h1 className="mt-3 text-4xl font-black text-rose-950">Your Lovebox link is ready.</h1>
-          <p className="mt-3 text-sm leading-6 text-stone-600">
-            Send this link to him. The package data is tucked inside the URL for now.
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#fff7f0] px-5 py-10">
+      <div className="w-full max-w-sm">
+        {/* Sealed envelope hero */}
+        <div className="text-center mb-7">
+          <span className="text-7xl [animation:pop-in_0.55s_ease-out_forwards] block mb-3">
+            📮
+          </span>
+          <h1 className="text-3xl font-black text-rose-950">All sealed up! 💌</h1>
+          <p className="text-stone-500 mt-2 text-sm leading-relaxed">
+            Your Lovebox is ready to send.
           </p>
         </div>
 
-        <div className="mt-6 rounded-[1.5rem] border border-rose-100 bg-rose-50/70 p-4">
-          <p className="text-sm font-black text-rose-950">Package contents</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {payload.gifts.map((packedGift) => {
-              const gift = getGiftOption(packedGift.giftId);
-
-              return (
-                <span
-                  className="rounded-full bg-white px-3 py-2 text-sm font-bold text-rose-800 shadow-sm"
-                  key={packedGift.instanceId}
-                >
-                  {gift.emoji} {gift.name}
-                </span>
-              );
-            })}
+        {/* Package contents preview */}
+        <div className="bg-white rounded-3xl border border-rose-100 p-4 shadow-lg mb-5">
+          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-rose-400 mb-3">
+            Inside the box
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {draft.gifts.length > 0 ? (
+              draft.gifts.map((id, i) => {
+                const gift = GIFTS.find((g) => g.id === id);
+                if (!gift) return null;
+                return (
+                  <span
+                    key={`${id}-${i}`}
+                    className="inline-flex items-center gap-1.5 bg-rose-50 border border-rose-100 text-rose-800 text-sm font-semibold px-3 py-1.5 rounded-full"
+                  >
+                    <span aria-hidden="true">{gift.emoji}</span>
+                    {gift.name}
+                  </span>
+                );
+              })
+            ) : (
+              <span className="text-stone-400 text-sm">No gifts added yet.</span>
+            )}
           </div>
         </div>
 
-        <label className="mt-5 block">
-          <span className="text-sm font-black text-rose-950">Shareable gift link</span>
+        {/* Shareable link */}
+        <div className="mb-5">
+          <label
+            htmlFor="gift-link"
+            className="block text-[11px] font-black uppercase tracking-[0.2em] text-stone-500 mb-2"
+          >
+            Gift link
+          </label>
           <input
-            className="mt-2 w-full rounded-2xl border border-rose-100 bg-white px-3 py-3 text-sm text-stone-700"
+            id="gift-link"
+            className="w-full bg-rose-50 border border-rose-200 rounded-2xl px-4 py-3 text-sm text-stone-700 outline-none focus:ring-2 focus:ring-rose-300 font-mono select-all"
             readOnly
             value={giftLink}
+            onClick={(e) => (e.target as HTMLInputElement).select()}
           />
-        </label>
+        </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        {/* Action buttons */}
+        <div className="flex flex-col gap-3">
           <button
-            className="rounded-full bg-rose-500 px-5 py-4 text-sm font-black text-white shadow-lg shadow-rose-200 transition hover:-translate-y-0.5 hover:bg-rose-600"
-            onClick={copyGiftLink}
-            type="button"
+            className="w-full py-4 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white font-black rounded-full shadow-xl shadow-rose-300/60 transition-all hover:-translate-y-0.5"
+            onClick={copyLink}
           >
-            {copied ? "Copied!" : "Copy gift link"}
+            {copied ? "Copied! ✓" : "Copy gift link 📋"}
           </button>
+
           <Link
-            className="rounded-full bg-stone-900 px-5 py-4 text-center text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-stone-800"
             href={giftLink || "/open"}
+            className="w-full py-4 bg-white hover:bg-rose-50 text-rose-600 font-black rounded-full border-2 border-rose-200 text-center transition-all hover:-translate-y-0.5 shadow-sm"
           >
-            Preview opening
+            Preview opening ↗
+          </Link>
+
+          <Link
+            href="/pack"
+            className="text-center text-stone-400 text-sm hover:text-stone-600 transition-colors mt-1"
+          >
+            ← Edit gifts
           </Link>
         </div>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }

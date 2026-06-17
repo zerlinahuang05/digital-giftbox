@@ -1,53 +1,93 @@
 import Link from "next/link";
 
-export default function Home() {
+// Decorative background particles — hearts and sparkles scattered around.
+// Each item has the character to render and Tailwind classes for position + animation.
+const BG_PARTICLES = [
+  {
+    char: "♡",
+    cls: "left-[7%] top-[14%] text-rose-200 text-5xl [animation:heart-rise_4.8s_ease-in-out_infinite_0.2s]",
+  },
+  {
+    char: "✦",
+    cls: "left-[88%] top-[20%] text-amber-200 text-3xl [animation:sparkle_3.2s_ease-in-out_infinite_1s]",
+  },
+  {
+    char: "♡",
+    cls: "left-[80%] top-[62%] text-pink-200 text-4xl [animation:heart-rise_5.1s_ease-in-out_infinite_1.8s]",
+  },
+  {
+    char: "✦",
+    cls: "left-[10%] top-[68%] text-rose-200 text-2xl [animation:sparkle_2.9s_ease-in-out_infinite_0.7s]",
+  },
+  {
+    char: "♡",
+    cls: "left-[48%] top-[6%] text-pink-200 text-2xl [animation:heart-rise_3.8s_ease-in-out_infinite_2.2s]",
+  },
+  {
+    char: "✿",
+    cls: "left-[22%] top-[84%] text-rose-200 text-3xl [animation:float-soft_4.2s_ease-in-out_infinite_1.1s]",
+  },
+  {
+    char: "✦",
+    cls: "left-[65%] top-[80%] text-amber-200 text-xl [animation:sparkle_3.5s_ease-in-out_infinite_0.4s]",
+  },
+];
+
+export default function HomePage() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col justify-center px-4 py-6 sm:px-6">
-      <section className="relative overflow-hidden rounded-[2.4rem] border border-white/80 bg-white/70 p-6 shadow-2xl shadow-rose-200/50 backdrop-blur sm:p-10">
-        <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-rose-200/50 blur-2xl" />
-        <div className="absolute -bottom-12 -left-8 h-44 w-44 rounded-full bg-orange-200/50 blur-2xl" />
+    <main className="relative min-h-screen flex flex-col items-center justify-center px-5 overflow-hidden">
+      {/* Background particles */}
+      {BG_PARTICLES.map(({ char, cls }, i) => (
+        <span
+          key={i}
+          className={`absolute pointer-events-none select-none ${cls}`}
+          aria-hidden="true"
+        >
+          {char}
+        </span>
+      ))}
 
-        <div className="relative grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="space-y-7">
-            <p className="w-fit rounded-full bg-rose-100 px-4 py-2 text-sm font-bold text-rose-700 shadow-inner">
-              Lovebox
-            </p>
-            <div className="space-y-4">
-              <h1 className="text-5xl font-black tracking-tight text-rose-950 sm:text-7xl">
-                Pack a little love for him.
-              </h1>
-              <p className="text-lg leading-8 text-stone-700">
-                1,000 miles away, but this package still made it to you.
-              </p>
-              <p className="max-w-xl text-base leading-7 text-stone-600">
-                Drag tiny gifts into a soft digital box, seal it with a letter, and send
-                him a sweet package he can open on his phone.
-              </p>
-            </div>
-            <Link
-              className="inline-flex rounded-full bg-rose-500 px-7 py-4 text-base font-black text-white shadow-xl shadow-rose-300 transition hover:-translate-y-0.5 hover:bg-rose-600"
-              href="/pack"
-            >
-              Send a digital gift!
-            </Link>
-          </div>
+      {/* Hero card */}
+      <div className="relative z-10 text-center max-w-sm w-full">
+        {/* Badge */}
+        <p className="inline-block bg-rose-100 text-rose-600 text-xs font-black uppercase tracking-[0.22em] px-4 py-2 rounded-full mb-8 opacity-0 [animation:fade-up_0.6s_ease-out_0.05s_forwards]">
+          Lovebox 💝
+        </p>
 
-          <div className="rounded-[2rem] bg-gradient-to-br from-rose-200 via-orange-100 to-pink-100 p-4">
-            <div className="rounded-[1.65rem] border border-white/80 bg-white/75 p-6 text-center shadow-xl">
-              <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-[2rem] bg-white text-7xl shadow-inner [animation:float-soft_3.5s_ease-in-out_infinite]">
-                💝
-              </div>
-              <p className="mt-6 text-sm font-black uppercase tracking-[0.3em] text-rose-500">
-                special delivery
-              </p>
-              <h2 className="mt-3 text-3xl font-black text-rose-950">You have 1 package</h2>
-              <p className="mt-4 text-stone-700">
-                Cream paper, blush hearts, and a tiny box full of him-things.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+        {/* Main headline */}
+        <h1 className="text-[2.75rem] sm:text-6xl font-black leading-[1.08] tracking-tight text-rose-950 mb-5 opacity-0 [animation:fade-up_0.65s_ease-out_0.18s_forwards]">
+          A little package,
+          <br />
+          just for&nbsp;you.
+        </h1>
+
+        {/* Subtitle */}
+        <p className="text-stone-600 text-lg leading-relaxed mb-10 opacity-0 [animation:fade-up_0.65s_ease-out_0.32s_forwards]">
+          Send a tiny digital gift when distance feels too far.
+        </p>
+
+        {/* CTA button */}
+        <Link
+          href="/pack"
+          className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white font-black text-lg px-9 py-4 rounded-full shadow-2xl shadow-rose-300/70 transition-all hover:-translate-y-0.5 opacity-0 [animation:fade-up_0.65s_ease-out_0.45s_forwards]"
+        >
+          Send a digital gift!
+          <span aria-hidden="true">💝</span>
+        </Link>
+
+        {/* Tiny footnote */}
+        <p className="text-stone-400 text-sm mt-5 opacity-0 [animation:fade-up_0.65s_ease-out_0.58s_forwards]">
+          Free · No sign-up · Made with love
+        </p>
+      </div>
+
+      {/* Decorative oversized gift box, bottom-right corner */}
+      <div
+        className="absolute bottom-0 right-[-1rem] w-52 h-52 pointer-events-none select-none text-[9rem] flex items-end justify-end opacity-[0.08] [animation:float-soft_5s_ease-in-out_infinite]"
+        aria-hidden="true"
+      >
+        🎁
+      </div>
     </main>
   );
 }

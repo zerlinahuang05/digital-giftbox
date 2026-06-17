@@ -3,106 +3,152 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  defaultLetter,
-  emptyPayload,
-  getGiftOption,
-  loveboxDraftKey,
-  type LoveboxPayload,
-} from "@/lib/lovebox";
 
-function readDraftPayload() {
-  if (typeof window === "undefined") {
-    return emptyPayload();
-  }
+import { DEFAULT_NOTE } from "@/lib/gifts";
 
-  const saved = window.localStorage.getItem(loveboxDraftKey);
+const DRAFT_KEY = "lovebox-draft";
 
-  if (!saved) {
-    return emptyPayload();
-  }
-
+// Read previously saved note from localStorage (lazy initializer — no useEffect needed).
+function readSavedNote(): string {
+  if (typeof window === "undefined") return DEFAULT_NOTE;
   try {
-    return JSON.parse(saved) as LoveboxPayload;
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as { note?: unknown };
+      if (typeof parsed.note === "string") return parsed.note;
+    }
   } catch {
-    return emptyPayload();
+    /* ignore */
   }
+  return DEFAULT_NOTE;
 }
 
 export default function NotePage() {
   const router = useRouter();
-  const [payload] = useState<LoveboxPayload>(readDraftPayload);
-  const [letter, setLetter] = useState(() => payload.letter || defaultLetter);
+  const [note, setNote] = useState<string>(readSavedNote);
 
-  function sealLetter() {
-    const nextPayload = {
-      ...payload,
-      letter,
-    };
+  // sealing: stationery is animating out
+  // sealed:  full-screen envelope flash is showing
+  const [sealing, setSealing] = useState(false);
+  const [sealed, setSealed] = useState(false);
 
-    window.localStorage.setItem(loveboxDraftKey, JSON.stringify(nextPayload));
-    router.push("/share");
+  function handleSeal() {
+    // Save the note
+    try {
+      const raw = window.localStorage.getItem(DRAFT_KEY);
+      const draft = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...draft, note }));
+    } catch {
+      /* ignore */
+    }
+
+    // Trigger stationery fold-away animation, then show the full-screen seal flash,
+    // then navigate.
+    setSealing(true);
+    window.setTimeout(() => setSealed(true), 750);
+    window.setTimeout(() => router.push("/share"), 1650);
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-5 px-4 py-5">
-      <header className="rounded-[2rem] border border-white/80 bg-white/75 p-5 shadow-xl shadow-rose-100">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-rose-500">
-          stationery page
-        </p>
-        <h1 className="mt-2 text-3xl font-black text-rose-950">Write the main letter.</h1>
-        <p className="mt-2 text-sm leading-6 text-stone-600">
-          This is the big note he will read after opening the package.
-        </p>
+    <div className="min-h-screen flex flex-col bg-[#fff7f0] relative overflow-hidden">
+      {/* ── Envelope seal flash overlay ──────────────────────── */}
+      {sealed ? (
+        <div className="fixed inset-0 z-50 bg-[#fff7f0] flex flex-col items-center justify-center [animation:fade-in_0.45s_ease-out_forwards]">
+          <span className="text-8xl block mb-4 [animation:pop-in_0.5s_ease-out_forwards]">
+            📮
+          </span>
+          <p className="text-rose-600 font-black text-xl [animation:fade-up_0.5s_ease-out_0.2s_forwards] opacity-0">
+            Sealed with love!
+          </p>
+        </div>
+      ) : null}
+
+      {/* ── Header ──────────────────────────────────────────── */}
+      <header className="px-5 pt-5 pb-2 flex flex-col items-center text-center">
+        <Link href="/pack" className="text-rose-400 text-sm font-bold self-start mb-3">
+          ← Back
+        </Link>
+
+        {/* Small closed gift box icon */}
+        <div className="relative w-16 h-[3.25rem] mb-3" aria-hidden="true">
+          {/* Lid */}
+          <div className="absolute inset-x-0 top-0 h-5 bg-rose-500 rounded-t-xl shadow border-b-2 border-rose-600">
+            <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-2 bg-white/25" />
+          </div>
+          {/* Body */}
+          <div className="absolute bottom-0 inset-x-0 h-[2.1rem] bg-rose-500 rounded-b-xl shadow-lg">
+            <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-2 bg-white/25" />
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[5px] bg-white/25" />
+          </div>
+          {/* Bow */}
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-lg leading-none">
+            🎀
+          </span>
+        </div>
+
+        <h1 className="text-2xl font-black text-rose-950">Write your note</h1>
+        <p className="text-stone-500 text-sm mt-1">A little letter to tuck inside the box</p>
       </header>
 
-      <section className="rounded-[2rem] border border-rose-100 bg-white/80 p-5 shadow-xl shadow-orange-100">
-        <h2 className="text-lg font-black text-rose-950">Packed gifts</h2>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {payload.gifts.length ? (
-            payload.gifts.map((packedGift) => {
-              const gift = getGiftOption(packedGift.giftId);
-
-              return (
-                <span
-                  className="rounded-full bg-rose-100 px-3 py-2 text-sm font-bold text-rose-800"
-                  key={packedGift.instanceId}
-                >
-                  {gift.emoji} {gift.name}
-                </span>
-              );
-            })
-          ) : (
-            <Link className="text-sm font-bold text-rose-600 underline" href="/pack">
-              Add gifts before sealing your Lovebox.
-            </Link>
-          )}
-        </div>
-      </section>
-
-      <section className="relative flex flex-1 flex-col rounded-[2rem] border border-rose-100 bg-[#fffaf4] p-5 shadow-2xl shadow-rose-100">
-        <div className="absolute inset-x-6 top-16 border-t border-rose-100" />
-        <div className="absolute inset-x-6 top-28 border-t border-rose-100" />
-        <div className="absolute inset-x-6 top-40 border-t border-rose-100" />
-        <label className="relative z-10 flex flex-1 flex-col">
-          <span className="mb-3 text-sm font-black uppercase tracking-[0.25em] text-rose-500">
-            Dear love,
-          </span>
-          <textarea
-            className="min-h-80 flex-1 resize-none rounded-[1.5rem] border border-rose-100 bg-white/65 p-4 text-base leading-8 text-stone-800 outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
-            onChange={(event) => setLetter(event.target.value)}
-            value={letter}
-          />
-        </label>
-      </section>
-
-      <button
-        className="rounded-full bg-rose-500 px-6 py-4 text-base font-black text-white shadow-xl shadow-rose-300 transition hover:-translate-y-0.5 hover:bg-rose-600"
-        onClick={sealLetter}
-        type="button"
+      {/* ── Stationery ──────────────────────────────────────── */}
+      <div
+        className={`
+          relative flex-1 mx-4 mt-3 mb-4 rounded-3xl overflow-hidden
+          shadow-xl border border-rose-100/60
+          ${sealing ? "[animation:scale-out-up_0.75s_ease-in_forwards]" : ""}
+        `}
       >
-        Seal my letter!
-      </button>
-    </main>
+        {/* Paper background */}
+        <div className="absolute inset-0 bg-[#fffcf7]" />
+
+        {/* Ruled lines */}
+        {Array.from({ length: 11 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute inset-x-5 h-px bg-rose-100"
+            style={{ top: `${88 + i * 38}px` }}
+          />
+        ))}
+
+        {/* Paper header strip */}
+        <div className="relative z-10 flex items-center gap-2 px-6 pt-5 pb-3 border-b border-rose-100">
+          <span className="text-rose-300 text-lg" aria-hidden="true">
+            💌
+          </span>
+          <span className="text-rose-400 text-sm font-medium tracking-wide">Lovebox Letter</span>
+          <div className="ml-auto flex gap-1" aria-hidden="true">
+            <span className="text-rose-200 text-xs">♡</span>
+            <span className="text-rose-200 text-xs">♡</span>
+            <span className="text-rose-200 text-xs">♡</span>
+          </div>
+        </div>
+
+        {/* Textarea — styled to look like handwriting on the ruled paper */}
+        <textarea
+          className="relative z-10 w-full min-h-[300px] px-6 py-3 pb-6 bg-transparent resize-none outline-none text-[#3d1f1a] text-[1.05rem]"
+          style={{ fontFamily: 'Georgia, "Times New Roman", serif', lineHeight: "38px" }}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Write something sweet…"
+          maxLength={600}
+        />
+
+        {/* Character count */}
+        <p className="relative z-10 text-right px-6 pb-4 text-rose-300 text-xs">
+          {note.length}/600
+        </p>
+      </div>
+
+      {/* ── Seal button ─────────────────────────────────────── */}
+      <div className="px-5 pb-6">
+        <button
+          className="w-full py-4 bg-rose-500 hover:bg-rose-600 active:bg-rose-700 text-white font-black text-base rounded-full shadow-xl shadow-rose-300/60 transition-all hover:-translate-y-0.5 disabled:opacity-60"
+          onClick={handleSeal}
+          disabled={sealing}
+        >
+          {sealing ? "Sealing… 📮" : "Seal my letter! 💌"}
+        </button>
+      </div>
+    </div>
   );
 }

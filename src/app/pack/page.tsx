@@ -1,39 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  defaultGiftNote,
-  emptyPayload,
-  getGiftOption,
-  giftOptions,
-  loveboxDraftKey,
-  type LoveboxGiftId,
-  type PackedGift,
-} from "@/lib/lovebox";
+import { useEffect, useRef, useState } from "react";
 
-type DragState = {
-  giftId: LoveboxGiftId;
-  x: number;
-  y: number;
-  startX: number;
-  startY: number;
-};
+import { GIFTS } from "@/lib/gifts";
 
-function readPackedGifts() {
-  if (typeof window === "undefined") {
-    return [];
-  }
+const DRAFT_KEY = "lovebox-draft";
 
-  const saved = window.localStorage.getItem(loveboxDraftKey);
-
-  if (!saved) {
-    return [];
-  }
-
+// Read previously saved gift IDs from localStorage (used as lazy initializer).
+function readSavedGifts(): string[] {
+  if (typeof window === "undefined") return [];
   try {
-    const parsed = JSON.parse(saved) as { gifts?: PackedGift[] };
-    return Array.isArray(parsed.gifts) ? parsed.gifts : [];
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as { gifts?: unknown };
+    return Array.isArray(parsed.gifts) ? (parsed.gifts as string[]) : [];
   } catch {
     return [];
   }
@@ -41,240 +23,240 @@ function readPackedGifts() {
 
 export default function PackPage() {
   const router = useRouter();
+
+  // IDs of gifts packed into the box (may have duplicates).
+  const [boxedIds, setBoxedIds] = useState<string[]>(readSavedGifts);
+
+  // Drag state — we use both state (for rendering the ghost) and refs
+  // (for stable values inside the pointer event handlers).
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragPos, setDragPos] = useState({ x: 0, y: 0 });
+  const [overBox, setOverBox] = useState(false);
+  const dragIdRef = useRef<string | null>(null);
+  const startPosRef = useRef({ x: 0, y: 0 });
+
   const boxRef = useRef<HTMLDivElement>(null);
-  const [packedGifts, setPackedGifts] = useState<PackedGift[]>(readPackedGifts);
-  const [pendingGiftId, setPendingGiftId] = useState<LoveboxGiftId | null>(null);
-  const [giftNote, setGiftNote] = useState(defaultGiftNote);
-  const [dragging, setDragging] = useState<DragState | null>(null);
 
-  const pendingGift = useMemo(
-    () => (pendingGiftId ? getGiftOption(pendingGiftId) : null),
-    [pendingGiftId],
-  );
-
+  // Attach / detach global pointer listeners while dragging.
   useEffect(() => {
-    if (!dragging) {
-      return;
-    }
+    if (!dragId) return;
 
-    const { giftId, startX, startY } = dragging;
-
-    function onPointerMove(event: PointerEvent) {
-      setDragging((current) =>
-        current ? { ...current, x: event.clientX, y: event.clientY } : current,
-      );
-    }
-
-    function onPointerUp(event: PointerEvent) {
-      const box = boxRef.current?.getBoundingClientRect();
-      const moved = Math.hypot(event.clientX - startX, event.clientY - startY);
-      const droppedInBox =
-        !!box &&
-        event.clientX >= box.left &&
-        event.clientX <= box.right &&
-        event.clientY >= box.top &&
-        event.clientY <= box.bottom;
-
-      setDragging(null);
-
-      if (droppedInBox || moved < 10) {
-        setPendingGiftId(giftId);
-        setGiftNote(defaultGiftNote);
+    function onMove(e: PointerEvent) {
+      e.preventDefault();
+      setDragPos({ x: e.clientX, y: e.clientY });
+      if (boxRef.current) {
+        const r = boxRef.current.getBoundingClientRect();
+        setOverBox(
+          e.clientX > r.left &&
+            e.clientX < r.right &&
+            e.clientY > r.top &&
+            e.clientY < r.bottom,
+        );
       }
     }
 
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerUp);
+    function onUp(e: PointerEvent) {
+      const sp = startPosRef.current;
+      const moved = Math.hypot(e.clientX - sp.x, e.clientY - sp.y);
 
-    return () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
-    };
-  }, [dragging]);
+      if (boxRef.current) {
+        const r = boxRef.current.getBoundingClientRect();
+        const inBox =
+          e.clientX > r.left &&
+          e.clientX < r.right &&
+          e.clientY > r.top &&
+          e.clientY < r.bottom;
 
-  function startDrag(event: ReactPointerEvent<HTMLButtonElement>, giftId: LoveboxGiftId) {
-    event.preventDefault();
-    setDragging({
-      giftId,
-      x: event.clientX,
-      y: event.clientY,
-      startX: event.clientX,
-      startY: event.clientY,
-    });
-  }
+        // Add to box if: dropped over box OR barely moved (tap gesture).
+        if (inBox || moved < 10) {
+          const id = dragIdRef.current;
+          if (id) setBoxedIds((prev) => [...prev, id]);
+        }
+      }
 
-  function addPendingGift() {
-    if (!pendingGiftId) {
-      return;
+      setDragId(null);
+      setOverBox(false);
+      dragIdRef.current = null;
     }
 
-    setPackedGifts((current) => [
-      ...current,
-      {
-        instanceId: `${pendingGiftId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        giftId: pendingGiftId,
-        note: giftNote.trim() || defaultGiftNote,
-      },
-    ]);
-    setPendingGiftId(null);
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [dragId]);
+
+  function startDrag(e: React.PointerEvent<HTMLButtonElement>, id: string) {
+    e.preventDefault();
+    dragIdRef.current = id;
+    startPosRef.current = { x: e.clientX, y: e.clientY };
+    setDragId(id);
+    setDragPos({ x: e.clientX, y: e.clientY });
   }
 
-  function removeGift(instanceId: string) {
-    setPackedGifts((current) => current.filter((gift) => gift.instanceId !== instanceId));
+  function removeFromBox(index: number) {
+    setBoxedIds((prev) => prev.filter((_, i) => i !== index));
   }
 
-  function continueToLetter() {
-    const current = emptyPayload();
-    current.gifts = packedGifts;
-    window.localStorage.setItem(loveboxDraftKey, JSON.stringify(current));
+  function handleContinue() {
+    try {
+      const raw = window.localStorage.getItem(DRAFT_KEY);
+      const draft = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...draft, gifts: boxedIds }));
+    } catch {
+      /* ignore */
+    }
     router.push("/note");
   }
 
+  const dragGift = dragId ? GIFTS.find((g) => g.id === dragId) : null;
+
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-5 px-4 py-5">
-      <header className="rounded-[2rem] border border-white/80 bg-white/75 p-5 shadow-xl shadow-rose-100">
-        <p className="text-sm font-black uppercase tracking-[0.28em] text-rose-500">
-          pack the Lovebox
-        </p>
-        <h1 className="mt-2 text-3xl font-black text-rose-950">Drag gifts into the box.</h1>
-        <p className="mt-2 text-sm leading-6 text-stone-600">
-          Use your finger to drag, or tap any gift to add it. Each gift gets its own tiny note.
+    <div className="min-h-screen flex flex-col bg-[#fff7f0]">
+      {/* ── Header ─────────────────────────────────────────── */}
+      <header className="px-5 pt-5 pb-3 flex flex-col items-center text-center">
+        <Link href="/" className="text-rose-400 text-sm font-bold self-start mb-3">
+          ← Back
+        </Link>
+        <h1 className="text-2xl font-black text-rose-950">Pack your Lovebox</h1>
+        <p className="text-stone-500 text-sm mt-1">
+          Drag a gift into the box — or tap it to add
         </p>
       </header>
 
-      <section className="sticky top-3 z-10 -mx-4 overflow-x-auto px-4 pb-2">
-        <div className="flex min-w-max gap-3">
-          {giftOptions.map((gift) => (
+      {/* ── Gift picker (horizontal scroll) ───────────────── */}
+      <div className="px-5 py-2">
+        <div className="flex gap-5 overflow-x-auto no-scrollbar pb-1 pt-1">
+          {GIFTS.map((gift) => (
             <button
-              className={`touch-none rounded-3xl border border-white/80 bg-gradient-to-br ${gift.color} px-4 py-3 text-left shadow-lg shadow-rose-100 transition active:scale-95`}
               key={gift.id}
-              onPointerDown={(event) => startDrag(event, gift.id)}
-              type="button"
+              className="flex flex-col items-center gap-1.5 min-w-[64px] touch-none select-none cursor-grab active:scale-90 transition-transform duration-150"
+              onPointerDown={(e) => startDrag(e, gift.id)}
+              aria-label={`Add ${gift.name}`}
             >
-              <span className="block text-3xl" aria-hidden="true">
+              {/* Cutout emoji — just the emoji, no background box */}
+              <span
+                className="text-5xl drop-shadow-[0_3px_8px_rgba(0,0,0,0.13)] [animation:float-soft_3.5s_ease-in-out_infinite] hover:[animation-play-state:paused]"
+                aria-hidden="true"
+              >
                 {gift.emoji}
               </span>
-              <span className="mt-1 block text-sm font-black text-rose-950">{gift.name}</span>
+              {/* Floating label pill */}
+              <span className="text-[11px] font-semibold text-rose-700 bg-white/80 border border-rose-100 px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm">
+                {gift.name}
+              </span>
             </button>
           ))}
         </div>
-      </section>
+      </div>
 
-      <section className="flex flex-1 flex-col justify-end gap-5">
-        <div className="rounded-[2rem] border border-rose-100 bg-white/65 p-4 shadow-xl shadow-orange-100">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="text-xl font-black text-rose-950">Inside the box</h2>
-            <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700">
-              {packedGifts.length} {packedGifts.length === 1 ? "gift" : "gifts"}
-            </span>
+      {/* ── Gift box (drop target + display) ───────────────── */}
+      <div className="flex-1 flex flex-col px-5 pb-5 gap-3 min-h-0">
+        <div className="relative flex-1 min-h-[200px]">
+          {/* Open lid — resting tilted behind the box */}
+          <div
+            className="absolute left-1/2 z-20 pointer-events-none"
+            style={{ top: "-8px", transform: "translateX(-50%) rotate(-7deg) translateY(-34px)" }}
+            aria-hidden="true"
+          >
+            <div className="relative w-56 h-11 bg-rose-500 rounded-t-2xl rounded-b-sm shadow-lg border-b-4 border-rose-600">
+              {/* Lid ribbon */}
+              <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-4 bg-white/20" />
+              {/* Bow */}
+              <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-2xl leading-none">
+                🎀
+              </span>
+            </div>
           </div>
-          <div className="grid min-h-28 grid-cols-2 gap-3">
-            {packedGifts.length === 0 ? (
-              <p className="col-span-2 rounded-3xl border border-dashed border-rose-200 bg-white/70 p-5 text-center text-sm leading-6 text-stone-500">
-                Your box is waiting for flowers, candy, coffee, and all the tiny things.
-              </p>
-            ) : (
-              packedGifts.map((packedGift) => {
-                const gift = getGiftOption(packedGift.giftId);
 
-                return (
-                  <article
-                    className="rounded-3xl bg-white/85 p-3 shadow-inner"
-                    key={packedGift.instanceId}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-3xl" aria-hidden="true">
-                        {gift.emoji}
-                      </span>
-                      <button
-                        className="rounded-full bg-rose-100 px-2 text-xs font-bold text-rose-700"
-                        onClick={() => removeGift(packedGift.instanceId)}
-                        type="button"
-                      >
-                        remove
-                      </button>
-                    </div>
-                    <h3 className="mt-2 text-sm font-black text-rose-950">{gift.name}</h3>
-                    <p className="mt-1 line-clamp-3 text-xs leading-5 text-stone-600">
-                      {packedGift.note}
-                    </p>
-                  </article>
-                );
-              })
-            )}
-          </div>
-        </div>
+          {/* Box body */}
+          <div
+            ref={boxRef}
+            className={`
+              relative w-full h-full
+              bg-gradient-to-b from-rose-400 to-rose-600
+              rounded-b-3xl rounded-t-sm
+              border-t-8 border-rose-600
+              shadow-2xl shadow-rose-300/60
+              overflow-hidden
+              transition-transform duration-200
+              ${overBox ? "scale-[1.018] ring-4 ring-white/50" : ""}
+            `}
+          >
+            {/* Vertical ribbon strip */}
+            <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-5 bg-white/15 pointer-events-none" />
+            {/* Horizontal ribbon strip */}
+            <div className="absolute inset-x-0 top-[38%] h-5 bg-white/15 pointer-events-none" />
+            {/* Inner shadow at top rim */}
+            <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black/15 to-transparent pointer-events-none" />
 
-        <div
-          className="relative rounded-t-[3rem] border-x border-t border-rose-200 bg-gradient-to-b from-rose-200 via-rose-100 to-orange-100 p-5 shadow-2xl shadow-rose-200"
-          ref={boxRef}
-        >
-          <div className="absolute left-1/2 top-0 h-8 w-44 -translate-x-1/2 -translate-y-1/2 rounded-t-[2rem] bg-rose-300 shadow-lg" />
-          <div className="min-h-32 rounded-[2rem] border border-white/80 bg-white/65 p-4 text-center">
-            <p className="text-sm font-black uppercase tracking-[0.3em] text-rose-500">
-              open gift box
-            </p>
-            <p className="mt-3 text-4xl" aria-hidden="true">
-              🎁
-            </p>
-            <p className="mt-2 text-sm leading-6 text-stone-600">Drop a gift here.</p>
-          </div>
-        </div>
-
-        <button
-          className="rounded-full bg-rose-500 px-6 py-4 text-base font-black text-white shadow-xl shadow-rose-300 transition disabled:cursor-not-allowed disabled:bg-rose-200"
-          disabled={packedGifts.length === 0}
-          onClick={continueToLetter}
-          type="button"
-        >
-          All packaged up!
-        </button>
-      </section>
-
-      {dragging ? (
-        <div
-          className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-1/2 rounded-3xl bg-white/90 px-5 py-4 text-5xl shadow-2xl shadow-rose-300"
-          style={{ left: dragging.x, top: dragging.y }}
-        >
-          {getGiftOption(dragging.giftId).emoji}
-        </div>
-      ) : null}
-
-      {pendingGift ? (
-        <div className="fixed inset-0 z-50 flex items-end bg-rose-950/25 p-4 backdrop-blur-sm sm:items-center sm:justify-center">
-          <div className="w-full max-w-md rounded-[2rem] bg-white p-5 shadow-2xl">
-            <p className="text-sm font-black uppercase tracking-[0.25em] text-rose-500">
-              tiny gift note
-            </p>
-            <h2 className="mt-3 text-2xl font-black text-rose-950">
-              {pendingGift.emoji} {pendingGift.name}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-stone-600">{pendingGift.blurb}</p>
-            <textarea
-              className="mt-4 min-h-28 w-full resize-none rounded-3xl border border-rose-100 bg-rose-50/70 p-4 text-sm leading-6 outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
-              maxLength={160}
-              onChange={(event) => setGiftNote(event.target.value)}
-              value={giftNote}
-            />
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <button
-                className="rounded-full bg-stone-100 px-4 py-3 text-sm font-black text-stone-700"
-                onClick={() => setPendingGiftId(null)}
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                className="rounded-full bg-rose-500 px-4 py-3 text-sm font-black text-white"
-                onClick={addPendingGift}
-                type="button"
-              >
-                Add to box
-              </button>
+            {/* Contents */}
+            <div className="relative z-10 w-full h-full flex flex-wrap items-center justify-center gap-3 p-5 content-center">
+              {boxedIds.length === 0 ? (
+                /* Empty state */
+                <div className="flex flex-col items-center text-rose-200/80 select-none">
+                  <span className="text-5xl mb-2" aria-hidden="true">
+                    🎀
+                  </span>
+                  <p className="text-sm font-semibold">Drop gifts here</p>
+                  <p className="text-xs mt-0.5 opacity-70">or tap a gift above</p>
+                </div>
+              ) : (
+                boxedIds.map((id, index) => {
+                  const gift = GIFTS.find((g) => g.id === id);
+                  if (!gift) return null;
+                  return (
+                    <button
+                      key={`${id}-${index}`}
+                      className="text-[2.6rem] leading-none drop-shadow-md [animation:pop-in_0.35s_ease-out_forwards] hover:scale-110 active:scale-90 transition-transform"
+                      onClick={() => removeFromBox(index)}
+                      title={`Tap to remove ${gift.name}`}
+                      aria-label={`Remove ${gift.name} from box`}
+                    >
+                      {gift.emoji}
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
+
+        {/* Remove hint */}
+        {boxedIds.length > 0 && (
+          <p className="text-center text-stone-400 text-xs">
+            Tap a gift inside the box to remove it
+          </p>
+        )}
+
+        {/* Continue button */}
+        <button
+          className={`
+            w-full py-4 rounded-full font-black text-base text-white transition-all duration-200
+            ${
+              boxedIds.length > 0
+                ? "bg-rose-500 hover:bg-rose-600 active:bg-rose-700 shadow-xl shadow-rose-300/60 hover:-translate-y-0.5"
+                : "bg-rose-300 cursor-not-allowed opacity-60"
+            }
+          `}
+          disabled={boxedIds.length === 0}
+          onClick={handleContinue}
+        >
+          All packaged up! 📦
+        </button>
+      </div>
+
+      {/* ── Drag ghost (follows pointer) ───────────────────── */}
+      {dragGift ? (
+        <div
+          className="fixed pointer-events-none z-50 text-6xl leading-none -translate-x-1/2 -translate-y-1/2 drop-shadow-2xl"
+          style={{ left: dragPos.x, top: dragPos.y }}
+          aria-hidden="true"
+        >
+          {dragGift.emoji}
+        </div>
       ) : null}
-    </main>
+    </div>
   );
 }
