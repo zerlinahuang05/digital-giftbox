@@ -165,7 +165,7 @@ export default function PackPage() {
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-xl font-black text-rose-950">Inside the box</h2>
             <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-700">
-              {packedGifts.length} gifts
+              {packedGifts.length} {packedGifts.length === 1 ? "gift" : "gifts"}
             </span>
           </div>
           <div className="grid min-h-28 grid-cols-2 gap-3">
