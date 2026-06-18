@@ -314,7 +314,7 @@ function Letter({ note, onClose }) {
         <span className="absolute -top-2 left-8 h-5 w-12 -rotate-6 rounded-sm bg-blush/70" />
         <span className="absolute -top-2 right-8 h-5 w-12 rotate-6 rounded-sm bg-blush/70" />
         <div
-          className="min-h-[220px] whitespace-pre-line rounded-[1.2rem] px-6 py-6 text-lg leading-8 text-plum"
+          className="flex min-h-[220px] items-center justify-center whitespace-pre-line rounded-[1.2rem] px-6 py-6 text-center text-lg leading-8 text-plum"
           style={{
             backgroundImage:
               "repeating-linear-gradient(transparent, transparent 31px, rgba(107,59,94,0.10) 32px)",
