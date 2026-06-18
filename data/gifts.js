@@ -31,6 +31,36 @@ export const GIFTS = [
     src: "/assets/candy.png",
     emoji: "🍬",
   },
+  {
+    id: "iced-mocha-latte",
+    name: "iced mocha latte",
+    src: "/assets/iced-mocha-latte.png",
+    emoji: "🧋",
+  },
+  {
+    id: "costco-hotdog",
+    name: "costco hotdog",
+    src: "/assets/costco-hotdog.png",
+    emoji: "🌭",
+  },
+  {
+    id: "flower",
+    name: "flower",
+    src: "/assets/flower.png",
+    emoji: "🌹",
+  },
+  {
+    id: "lego-set",
+    name: "lego set",
+    src: "/assets/lego-set.png",
+    emoji: "🧱",
+  },
+  {
+    id: "cheese-crackers",
+    name: "cheese crackers",
+    src: "/assets/cheese-crackers.png",
+    emoji: "🧀",
+  },
 
   // 👉 Add more gifts here! For example:
   // {
