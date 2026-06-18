@@ -28,7 +28,7 @@ export default function SharePage() {
   useEffect(() => {
     const c = encodeGift({ gifts, note });
     setCode(c);
-    setLink(`${window.location.origin}/gift?d=${c}`);
+    setLink(`https://digital-giftbox.vercel.app/gift?d=${c}`);
   }, [gifts, note]);
 
   async function copyLink() {
