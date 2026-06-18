@@ -84,6 +84,7 @@ function Tracking({ onDone }) {
 
   // How far down the line is "filled in" (0% to 100%)
   const fillPct = (active / (steps.length - 1)) * 100;
+  const iconTop = `calc(${fillPct}% - ${6 + fillPct * 0.24}px)`;
 
   return (
     <motion.div
@@ -110,9 +111,9 @@ function Tracking({ onDone }) {
           />
           {/* the traveling mail icon */}
           <motion.div
-            className="absolute -left-[2px] z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-pink text-lg shadow-md"
+            className="absolute left-0 z-10 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-pink text-lg shadow-md"
             initial={{ top: 0 }}
-            animate={{ top: `calc(${fillPct}% - 4px)` }}
+            animate={{ top: iconTop }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
           >
             ✉️

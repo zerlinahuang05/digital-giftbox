@@ -58,10 +58,7 @@ export default function LandingPage() {
           {CONFIG.landing.button}
         </Link>
       </motion.div>
-
-      <p className="mt-8 text-sm font-semibold text-plum/40">
-        made with love · {CONFIG.appName}
-      </p>
+      
     </main>
   );
 }

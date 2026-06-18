@@ -57,7 +57,6 @@ export default function NotePage() {
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder={CONFIG.note.placeholder}
             rows={9}
             className="w-full resize-none rounded-[1.2rem] bg-transparent px-5 py-4 text-lg leading-8 text-plum outline-none placeholder:text-plum/35"
             style={{
@@ -67,9 +66,6 @@ export default function NotePage() {
             }}
           />
         </div>
-        <p className="mt-2 text-center text-xs font-semibold text-plum/40">
-          Write from the heart — this is the note that gets sealed inside. 💌
-        </p>
       </div>
 
       <button className="btn-cute mt-4 mb-2" onClick={handleSeal} disabled={sealing}>

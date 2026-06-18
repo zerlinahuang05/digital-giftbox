@@ -14,7 +14,7 @@ export const CONFIG = {
   // 1) LANDING PAGE
   landing: {
     title: "A surprise,\njust for you.",
-    subtitle: "Someone packed a little box of love and sent it across the miles.",
+    subtitle: "Just as good as a real gift, right? ;)",
     button: "Send a digital gift!",
   },
 
