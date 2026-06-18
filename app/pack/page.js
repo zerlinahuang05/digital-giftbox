@@ -9,13 +9,15 @@
   Edit which gifts appear in: data/gifts.js
 */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
   DragOverlay,
   MouseSensor,
   TouchSensor,
+  pointerWithin,
+  rectIntersection,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -85,11 +87,19 @@ export default function PackPage() {
     setPlacement((prev) => ({ ...prev, [active.id]: target }));
   }
 
+  // Decide which zone a gift was dropped in. We use the finger/cursor
+  // position first (most reliable on phones), then fall back to overlap.
+  function collisionDetection(args) {
+    const byPointer = pointerWithin(args);
+    return byPointer.length ? byPointer : rectIntersection(args);
+  }
+
   const activeGift = activeId ? getGiftById(activeId) : null;
 
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={collisionDetection}
       onDragStart={(e) => setActiveId(e.active.id)}
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveId(null)}
@@ -132,56 +142,70 @@ export default function PackPage() {
           )}
         </Droppable>
 
-        {/* BOTTOM: the big open box (drop zone "box") */}
+        {/* BOTTOM: the big open box (this whole area is the "box" drop zone) */}
         <div className="mt-auto flex w-full flex-col items-center pb-4">
-          <Droppable id="box-zone" className="relative w-full max-w-md">
+          <Droppable
+            id="box-zone"
+            className="relative mx-auto h-64 w-full max-w-md sm:h-72"
+          >
             {(isOver) => (
               <div
-                className={`relative mx-auto flex h-72 w-full items-end justify-center transition-transform ${
-                  isOver ? "scale-105" : ""
+                className={`absolute inset-0 origin-bottom transition-transform duration-200 ${
+                  isOver ? "scale-[1.04]" : ""
                 }`}
               >
-                {/* The lid sitting next to the box */}
+                {/* The lid sitting next to the box (behind it, leaning) */}
                 <img
                   src="/assets/box-lid.png"
                   alt="Box lid"
-                  className="absolute bottom-2 right-0 h-24 w-28 rotate-6 object-contain opacity-95 sm:h-28 sm:w-32"
+                  className="pointer-events-none absolute bottom-1 right-1 z-0 w-44 rotate-[9deg] object-contain drop-shadow-md sm:w-52"
                   draggable={false}
                 />
 
-                {/* The open box itself */}
-                <div className="relative h-64 w-64 sm:h-72 sm:w-72">
+                {/* The open box, centered */}
+                <div className="absolute bottom-0 left-1/2 z-10 w-72 max-w-[84vw] -translate-x-1/2 sm:w-80">
+                  {/* layer 1: back + inside of the box */}
                   <img
                     src="/assets/box-open.png"
                     alt="Open gift box"
-                    className={`h-full w-full object-contain transition-[filter] ${
-                      isOver ? "drop-shadow-[0_0_22px_rgba(255,122,162,0.7)]" : ""
+                    className={`relative z-10 block w-full transition-[filter] duration-200 ${
+                      isOver ? "drop-shadow-[0_0_24px_rgba(255,122,162,0.75)]" : ""
                     }`}
                     draggable={false}
                   />
 
-                  {/* Packed gifts peeking out of the top of the box */}
-                  <div className="pointer-events-none absolute inset-x-0 top-[14%] flex h-1/2 items-start justify-center">
+                  {/* layer 2: the packed gifts, nestled DOWN inside the box */}
+                  <div className="pointer-events-none absolute inset-0 z-20">
                     {boxGifts.map((gift, i) => {
-                      const spread = (i - (boxGifts.length - 1) / 2) * 38;
+                      const spread = (i - (boxGifts.length - 1) / 2) * 30;
                       return (
                         <Draggable
                           key={gift.id}
                           id={gift.id}
-                          className="pointer-events-auto absolute"
+                          className="pointer-events-auto absolute left-1/2 top-[34%] w-24 sm:w-28"
                           style={{
-                            transform: `translateX(${spread}px)`,
-                            zIndex: 10 + i,
+                            transform: `translate(-50%, -50%) translateX(${spread}px)`,
+                            zIndex: 20 + i,
                           }}
                         >
                           <GiftImage
                             gift={gift}
-                            className="h-20 w-20 object-contain drop-shadow-md sm:h-24 sm:w-24"
+                            className="w-full object-contain drop-shadow-md"
                           />
                         </Draggable>
                       );
                     })}
                   </div>
+
+                  {/* layer 3: the FRONT of the box, drawn on top so gifts look
+                      like they're sitting inside and peeking out of the opening */}
+                  <img
+                    src="/assets/box-front.png"
+                    alt=""
+                    aria-hidden
+                    className="pointer-events-none absolute inset-x-0 bottom-0 z-30 w-full"
+                    draggable={false}
+                  />
                 </div>
               </div>
             )}
@@ -189,7 +213,7 @@ export default function PackPage() {
 
           {/* "All packaged up!" button */}
           <button
-            className="btn-cute mt-2"
+            className="btn-cute mt-3"
             disabled={boxGifts.length === 0}
             onClick={() => router.push("/note")}
           >
