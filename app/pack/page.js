@@ -31,13 +31,13 @@ import { useGift } from "@/components/GiftProvider";
 
 // Scatter positions for the gifts in the tray, so they don't sit in a line.
 const SCATTER = [
-  { left: "8%", top: "8%", rot: -8 },
-  { left: "58%", top: "2%", rot: 7 },
-  { left: "33%", top: "34%", rot: -4 },
-  { left: "72%", top: "40%", rot: 9 },
-  { left: "4%", top: "52%", rot: 6 },
-  { left: "46%", top: "62%", rot: -9 },
-  { left: "80%", top: "8%", rot: 4 },
+  { left: "8%", top: "8%", rot: -8 },   // teddy
+  { left: "58%", top: "2%", rot: 7 },   // candy
+  { left: "33%", top: "22%", rot: -4 }, // iced mocha — moved up
+  { left: "72%", top: "52%", rot: 9 },  // hotdog — moved down
+  { left: "4%", top: "64%", rot: 6 },   // flower — moved down
+  { left: "46%", top: "62%", rot: -9 }, // lego set
+  { left: "80%", top: "0%", rot: 4 },   // crackers — moved up
   { left: "20%", top: "74%", rot: -6 },
 ];
 
